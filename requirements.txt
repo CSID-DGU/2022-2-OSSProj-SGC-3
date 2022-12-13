@@ -1,0 +1,5 @@
+pygame>=2.1.2
+pygame_menu>=4.2.8
+pyrebase4>=4.5.0
+firebase_admin>=6.0.1
+pyautogui>=0.9.53

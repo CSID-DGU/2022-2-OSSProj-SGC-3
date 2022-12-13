@@ -1,323 +1,351 @@
 import pygame
-from datetime import datetime
 import pygame_menu
 from os import system
-import button
 import register
 import pyautogui as pg
-from register import db, firestore
 import dataLoad
+from Defs import *
 
 pygame.mixer.init()
 
 
-class Display:
-    w_init = 1/3
-    h_init = 8/9
-    angle = 0
-    help_scale = (0.4, 0.4)
-    arrowkey_scale = (0.1, 0.1)
-    title_scale = (1, 1)
 
+# Sounds
+bgmsound = pygame.mixer.Sound(Sounds.bgm.value)
 
-class Utillization:
-    x = 0
-    y = 1
-
-
-def start_the_game():
-    import mainGame
-
-
-# game variables
-gamesound = pygame.mixer.Sound(
-    "resource/sound/summer-by-lake-bird-chirping-01.mp3")  # example sound
-sound_on = False
-
+# window screen 초기 설정
 pygame.init()
 infoObject = pygame.display.Info()
-size = [int(infoObject.current_w*Display.w_init),
-        int(infoObject.current_h*Display.h_init)]
+size = [int(infoObject.current_w*Display.w_init.value),
+        int(infoObject.current_h*Display.h_init.value)]
 screen = pygame.display.set_mode(size, pygame.RESIZABLE)
-pygame.display.set_caption("Next Dimension")  # 캡션
+pygame.display.set_caption(Content.gamename.value)
 
-# 창이 resize되었는지 여부 체크
-
-
+# 창 resize 여부 체크
 def on_resize() -> None:
-    """
-    Function checked if the window is resized.
-    """
     window_size = screen.get_size()
-    new_w, new_h = window_size[0], window_size[1]
+    new_w, new_h = window_size[Utilization.x.value], window_size[Utilization.y.value]
     menu.resize(new_w, new_h)
 
 
-# 회원가입 시 ID, PW 박스
-email_box = button.InputBox(100, 100, 140, 32)
-password_box = button.InputBox(100, 200, 140, 32)
-input_boxes = [email_box, password_box]
+# 메뉴 화면 구성 #####
 
-# 로그인 전 보여지는 메뉴 화면(로그인, 회원가입)
+# FUNCTION ###
 
-
-def show_signinup():
-    menu.clear()
-    menu.add.image('resource/image/logo-silver.png',
-                   angle=Display.angle, scale=Display.title_scale)
-    menu.add.button('Sign in', login)
-    menu.add.button('Sign up', sign_up)
-    menu.add.button('Quit', pygame_menu.events.EXIT)
-
-# 로그인 후 보여지는 메뉴 화면
+## 게임 시작 함수
+def start_the_game():
+    from mainGame import startGame
+    startGame(True)
 
 
-def show_mode():
-    menu.clear()
-    menu.add.image('resource/image/logo-silver.png',
-                   angle=Display.angle, scale=Display.title_scale)
-    menu.add.button('Game Start', start_the_game)
-    menu.add.button('Rank', rank)
-    menu.add.button("Store", store)
-    menu.add.button('Help', help)
-    menu.add.button('About', about)
-    menu.add.toggle_switch("Sound", True, sound)
-    menu.add.button('Quit', pygame_menu.events.EXIT)
-
-
-def rank():
-    menu.clear()
-    print("rank DB")  # 추후 Rank DB 생성되면 연결하기!
-    menu.add.button('Back', show_mode)
-
-# help 페이지
-
-
-def help():
-    menu.clear()
-    menu.add.label('Story & Game Rule', font_size=35,
-                   padding=(50, 0, 50, 0))  # about page title
-    # story
-    content = 'In 2300 AD, you can no longer live on Earth\n'\
-        'and received a mission to find a new dimension for live.\n'\
-        'Now you must find a new dimension\nwhile avoiding enemy attacks.\n'\
-        'Good Luck!\n'
-    menu.add.label(content, font_size=20)
-
-    # game rule
-    # key control
-    menu.add.label(
-        'Use left and right arrow key to move your character', font_size=20)
-    # key images
-    left_img = menu.add.image('resource/image/arrowkey_left.png',
-                              angle=Display.angle, scale=Display.arrowkey_scale)
-    right_img = menu.add.image('resource/image/arrowkey_right.png',
-                               angle=Display.angle, scale=Display.arrowkey_scale)
-    # key table
-    table = menu.add.table(table_id='gamerule_key',
-                           font_size=20, border_color=None, padding=(3, 1, 3, 1))
-    table.add_row([left_img, '  Press left key to go left'])
-    table.add_row([right_img, '  Press right key to go right'])
-
-    # enemy HP detail
-    menu.add.label('Enemies have different HPs', font_size=20)
-    # enemy1 images
-    enemy1_img1 = menu.add.image(
-        'resource/image/chess_black_knight.png', angle=Display.angle, scale=Display.title_scale)
-    enemy1_img2 = menu.add.image(
-        'resource/image/green_bat.png', angle=Display.angle, scale=Display.title_scale)
-    enemy1_img3 = menu.add.image(
-        'resource/image/pirate_ship.png', angle=Display.angle, scale=Display.title_scale)
-    enemy1_img4 = menu.add.image(
-        'resource/image/card_jack.png', angle=Display.angle, scale=Display.title_scale)
-    enemy1_img5 = menu.add.image(
-        'resource/image/desert_snake.png', angle=Display.angle, scale=Display.title_scale)
-    # enemy2 images
-    enemy2_img1 = menu.add.image(
-        'resource/image/chess_white_king.png', angle=Display.angle, scale=Display.title_scale)
-    enemy2_img2 = menu.add.image(
-        'resource/image/green_lizard.png', angle=Display.angle, scale=Display.title_scale)
-    enemy2_img3 = menu.add.image(
-        'resource/image/pirate_kraken.png', angle=Display.angle, scale=Display.title_scale)
-    enemy2_img4 = menu.add.image(
-        'resource/image/card_queen.png', angle=Display.angle, scale=Display.title_scale)
-    enemy2_img5 = menu.add.image(
-        'resource/image/desert_scolpion.png', angle=Display.angle, scale=Display.title_scale)
-    # enemy table
-    table2 = menu.add.table(table_id='gamerule_enemy', font_color='black', font_size=20, padding=(
-        3, 1, 3, 1), background_color='white', border_width=0)
-    table2.add_row([enemy1_img1, enemy1_img2, enemy1_img3,
-                    enemy1_img4, enemy1_img5, '  Attack 1 time to kill'])
-    table2.add_row([enemy2_img1, enemy2_img2, enemy2_img3,
-                    enemy2_img4, enemy2_img5, '  Attack 2 times to kill'])
-    menu.add.vertical_margin(100)
-    menu.add.button('Back', show_mode)
-
-# about 페이지
-
-
-def about():
-    menu.clear()
-    menu.add.label('License & Source', font_size=35,
-                   padding=(50, 0, 50, 0))  # about page title
-    menu.add.label('Source', font_size=20)
-    menu.add.url('https://github.com/Kill-Console/PythonShootGame',
-                 'Kill-Console/PythonShootGame(The GPL License)', underline=False, font_color='white', font_size=18)
-    menu.add.url('https://github.com/CSID-DGU/2021-2-OSSProj-PlusAlpha-9',
-                 'CSID-DGU/2021-2-OSSProj-PlusAlpha-9(The MIT License)', underline=False, font_color='white', font_size=18)
-    menu.add.url('https://pixabay.com/ko/', 'pixabay',
-                 font_color='white', underline=False, font_size=18)
-    menu.add.url('https://www.soundeffectsplus.com/', 'soundeffectsplus',
-                 underline=False, font_color='white', font_size=18)
-
-    content = '\nCreated by\n'\
-        'Dongguk University OSSProj\n'\
-        'Seojeong Yun, Gaeun Lee, Seyeon Park'
-    menu.add.label(content, font_size=20)
-
-    menu.add.url('https://github.com/CSID-DGU/2022-2-OSSProj-SGC-3',
-                 'Click here to go to our github link', font_color='white', font_size=20)
-    menu.add.vertical_margin(100)
-    menu.add.button('Back', show_mode)
-
-# True가 반환될경우 소리가 켜지고 아니면 꺼짐
-
-
+## 소리 ON/OFF 함수
+# True가 반환될 경우 소리가 켜지고 아니면 꺼짐
 def sound(sound):
     if sound == True:
-        gamesound.play()
+        bgmsound.play()
     else:
-        gamesound.stop()
-
-# 회원가입 기능
+        bgmsound.stop()
 
 
-def sign_up():
-    menu.clear()
-    email = menu.add.text_input("email : ", id='email')
-    password = menu.add.text_input("password : ", password=True, id='password')
-    menu.add.label(
-        '* Please set the password to at least 8 digits', font_size=16)
-    conFirmPassword = menu.add.text_input(
-        "conFirm password : ", password=True, id='password')
-    menu.add.button('Submit', sign_up_button, email, password, conFirmPassword)
-    menu.add.button('Back', show_signinup)
-# 회원가입 제출 버튼
-
-
+## SIGN UP(회원가입) 함수
 def sign_up_button(email, password, conFirmPassword):
     registerReturn = register.register(
         email.get_value(), password.get_value(), conFirmPassword.get_value())
-    if registerReturn == 1:
-        print(pg.alert(text='회원가입에 성공하셨습니다.', title='Successfully signed up!'))
-        show_mode()  # 메인 메뉴 페이지로 넘어가기
+    if registerReturn == 1: # 회원가입 성공시, 성공 메시지 출력
+        print(pg.alert(text=Content.signupmsg.value, title=Content.signup.value))
     else:
-        print(pg.alert(text='메일 또는 비밀번호를 다시 확인해주세요.', title='sign up error'))
-
-# 비밀번호 재설정 버튼
+        print(pg.alert(text=Content.errormsg.value, title=Content.error.value))
 
 
-def resetPassword():
-    menu.clear()
-    email = menu.add.text_input("email : ", id='email')
-    menu.add.button('Submit', resetPassword_Button, email)
-    menu.add.button('Sign In', login)
-    menu.add.button('Back', show_signinup)
+## 로그인 함수
+def loginButton(email, password):
+    user_email = email.get_value()
+    register.email=user_email
+    login = register.Login(email.get_value(), password.get_value())
+    # 로그인 성공 시 메인 메뉴 페이지로 넘어감
+    if login != 0:
+        show_mode()
+    # 로그인 실패 시 알림
+    else:
+        print(pg.alert(text=Content.errormsg.value, title=Content.error.value))
 
 
+## 비밀번호 재설정 함수
 def resetPassword_Button(email):
     register.passwordReset(email.get_value())
-    print(pg.alert(text='메일을 통해 비밀번호를 재설정해주세요', title='Reset Password'))
-
-# 로그인
+    print(pg.alert(text=Content.resetmsg.value, title=Content.reset.value))
 
 
+## STORE: GIFT 코인 선물 함수
+def giveButton(friend_email,coin): 
+    if int(coin.get_value()) > dataLoad.coin_get(register.user):
+        print(pg.alert(text=Content.giveno_msg.value, title=Content.giveno_msgtitle.value))
+    else:
+        dataLoad.coin_give(register.email,friend_email.get_value(),coin.get_value())
+        print(pg.alert(text=Content.giveok_msg.value, title=Content.giveok_msgtitle.value))
+
+
+## STORE: BUY 아이템 구매 함수
+def Buy(user,item):
+    dataLoad.item_buy(user,item)
+
+
+## STORE: BUY 아이템 구매 확인 함수
+def Buy_check():
+    print(pg.alert(text=Content.have_msg.value, title=Content.have_msgtitle.value))
+
+
+## STORE: APPLY 현재 아이템 적용 함수
+def apply_current_item(user,item):
+    dataLoad.item_apply(user,item)
+
+
+## STORE: GIFT 코인 선물 함수
+def give_coin(user,coin):
+    dataLoad.coin_give(user,coin)
+
+
+# MENU ###
+
+## 로그인 전 보여지는 메뉴
+def show_signinup():
+    menu.clear()
+    menu.add.image(Images.logo.value,
+                   angle=Display.angle.value, scale=Display.large_scale.value)
+    menu.add.button(Content.signin_btn.value, login)
+    menu.add.button(Content.signup_btn.value, sign_up)
+    menu.add.button(Content.quit_btn.value, pygame_menu.events.EXIT)
+
+# 로그인 후 보여지는 메뉴 화면
+def show_mode():
+    menu.clear()
+    menu.add.image(Images.logo.value,
+                   angle=Display.angle.value, scale=Display.large_scale.value)
+    menu.add.button(Content.start_btn.value, start_the_game)
+    menu.add.button(Content.rank_btn.value, rank)
+    menu.add.button(Content.store_btn.value, store)
+    menu.add.button(Content.help_btn.value, help)
+    menu.add.button(Content.about_btn.value, about)
+    menu.add.toggle_switch(Content.sound_btn.value, False, sound)
+    menu.add.button(Content.quit_btn.value, pygame_menu.events.EXIT)
+
+
+
+## RANK 페이지
+def rank():
+    menu.clear()
+    # 랭킹 테이블
+    table=menu.add.table(table_id=Content.tb_rank.value)
+    table.default_cell_padding=Display.rank_padding.value
+    table.default_cell_align=pygame_menu.locals.ALIGN_CENTER
+    table.add_row(Content.rank_rowname.value,cell_font=pygame_menu.font.FONT_OPEN_SANS_BOLD,cell_padding=Display.rank_idx_padding.value)
+
+    # 랭킹 리스트 DB에서 가져오기
+    rank_list=dataLoad.rankList_get()
+
+    # 랭킹 테이블에 나타내기
+    for rank in rank_list:
+        rank[2]=format(rank[2],',') # 큰 숫자는 ,로 구분
+        table.add_row(rank,cell_font_size=Display.description_fontsize.value)
+
+    # 테이블 Display
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.button(Content.back_btn.value, show_mode) # 뒤로가기 버튼
+
+
+## HELP 페이지: STORY & GAME RULE
+def help():
+    menu.clear()
+    # 페이지 제목
+    menu.add.label(Content.help_title.value, font_size=Display.title_fontsize.value, padding=Display.padding_large.value)
+    
+    # STORY 내용
+    menu.add.label(Content.story.value, font_size=Display.description_fontsize.value)
+
+    # GAME RULE 내용
+    # key control
+    menu.add.label(Content.rule.value, font_size=Display.description_fontsize.value)
+    # key images
+    left_img = menu.add.image(Images.key_left.value,
+                              angle=Display.angle.value, scale=Display.small_scale.value)
+    right_img = menu.add.image(Images.key_right.value,
+                               angle=Display.angle.value, scale=Display.small_scale.value)
+    # key table
+    table = menu.add.table(font_size=Display.description_fontsize.value, padding=Display.padding_small.value)
+    table.add_row([left_img, Content.ruletable_row1.value])
+    table.add_row([right_img, Content.ruletable_row2.value])
+    menu.add.vertical_margin(Display.small_margin.value)
+
+    # enemy HP detail
+    menu.add.label(Content.hp.value, font_size=Display.description_fontsize.value)
+    # enemy1 images
+    enemy1_img1 = menu.add.image(Images.black_knight.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy1_img2 = menu.add.image(Images.bat.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy1_img3 = menu.add.image(Images.pirate_ship.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy1_img4 = menu.add.image(Images.card_jack.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy1_img5 = menu.add.image(Images.snake.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    # enemy2 images
+    enemy2_img1 = menu.add.image(Images.white_king.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy2_img2 = menu.add.image(Images.lizard.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy2_img3 = menu.add.image(Images.kraken.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy2_img4 = menu.add.image(Images.card_queen.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    enemy2_img5 = menu.add.image(Images.desert_scolpion.value, angle=Display.angle.value, scale=Display.large_scale.value)
+    # enemy table
+    table2 = menu.add.table(font_color=Color.black.value, font_size=Display.description_fontsize.value,
+                            padding=Display.padding_small.value, background_color=Color.white.value)
+    table2.add_row([enemy1_img1, enemy1_img2, enemy1_img3, enemy1_img4, enemy1_img5, Content.hptable_row1.value])
+    table2.add_row([enemy2_img1, enemy2_img2, enemy2_img3, enemy2_img4, enemy2_img5, Content.hptable_row2.value])
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.button(Content.back_btn.value, show_mode)
+
+
+## ABOUT 페이지: LICENSE & SOURCE
+def about():
+    menu.clear()
+    # 페이지 제목
+    menu.add.label(Content.about_title.value, font_size=Display.title_fontsize.value,
+                   padding=Display.padding_large.value)
+    # LICENSE
+    menu.add.label(Content.license.value, font_size=Display.description_fontsize.value)
+    menu.add.label(Content.license_detail.value, font_size=Display.description_fontsize.value)
+    menu.add.vertical_margin(Display.small_margin.value)
+
+    # SOURCE
+    menu.add.label(Content.source.value, font_size=Display.description_fontsize.value)
+    menu.add.url(Url.basecode1.value, Content.basecode1.value, underline=False, font_color=Color.white.value, font_size=Display.reference_fontsize.value)
+    menu.add.url(Url.basecode2.value, Content.basecode2.value, underline=False, font_color=Color.white.value, font_size=Display.reference_fontsize.value)
+    menu.add.url(Url.pixabay.value, Content.imagesource.value, underline=False, font_color=Color.white.value, font_size=Display.reference_fontsize.value)
+    menu.add.url(Url.envato.value, Content.soundesource.value, underline=False, font_color=Color.white.value, font_size=Display.reference_fontsize.value)
+
+    menu.add.label(Content.creators.value, font_size=Display.description_fontsize.value)
+
+    menu.add.url(Url.ourgithub.value, Content.github.value, font_color=Color.white.value, font_size=Display.reference_fontsize.value)
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.button(Content.back_btn.value, show_mode)
+
+
+## SIGN UP(회원가입) 페이지
+def sign_up():
+    menu.clear()
+    email = menu.add.text_input(Content.email_input.value, id=Content.email.value) # 이메일 입력
+    password = menu.add.text_input(Content.pw_input.value, password=True, id=Content.pw.value) # 비밀번호 입력
+    menu.add.label(Content.pwref.value, font_size=Display.reference_fontsize.value)
+    conFirmPassword = menu.add.text_input(Content.confirm_pw_input.value, password=True, id=Content.pw.value) # 비밀번호 재입력
+    menu.add.button(Content.submit_btn.value, sign_up_button, email, password, conFirmPassword) # 제출버튼
+    menu.add.button(Content.back_btn.value, show_signinup)
+
+## SIGN IN: SIGN비밀번호 재설정 페이지
+def resetPassword():
+    menu.clear()
+    email = menu.add.text_input(Content.email_input.value, id=Content.email.value)
+    menu.add.button(Content.submit_btn.value, resetPassword_Button, email)
+    menu.add.button(Content.signin_btn.value, login) # 로그인 페이지로 이동
+    menu.add.button(Content.back_btn.value, show_signinup)
+
+
+## SIGN IN(로그인) 페이지
 def login():
     menu.clear()
-    # 개발시 편의를 위해 default값 추가함 (추후 삭제 예정)
-    email = menu.add.text_input(
-        "Email : ", id='email', default='seyeon0627@gmail.com')
-    password = menu.add.text_input("Password : ", password=True, id='password')
-    menu.add.button('Submit', loginButton, email,
-                    password)  # submit 버튼을 누르면 로그인 시도
-    menu.add.button("Reset Password", resetPassword)
-    menu.add.button('Back', show_signinup)
+    email = menu.add.text_input(Content.email_input.value, id=Content.email.value)
+    password = menu.add.text_input(Content.pw_input.value, password=True, id=Content.pw.value)
+    menu.add.button(Content.submit_btn.value, loginButton, email, password)  # submit 버튼을 누르면 로그인 시도
+    menu.add.button(Content.reset_btn.value, resetPassword)
+    menu.add.button(Content.back_btn.value, show_signinup)
 
 
-def loginButton(email, password):
-    global user
-    user = email.get_value()
-    login = register.Login(email.get_value(), password.get_value())
-    if login != 0:  # 로그인에 성공하면 다음으로 넘어감
-        print(pg.alert(text='로그인에 성공하셨습니다.', title='Successfully signed in!'))
-        show_mode()  # 메인 메뉴 페이지로 넘어가기
-    else:
-        print(pg.alert(text='메일 또는 비밀번호를 다시 확인해주세요.', title='sign in error'))
-
-
+## STORE 페이지
 def store():
     menu.clear()
-    menu.add.label('Store', font_size=35, padding=(50, 0, 50, 0))  # page title
-    menu.add.label('Weapons')
-    menu.add.image('resource/image/bullets_256px.png',
-                   angle=Display.angle, scale=Display.help_scale)
-    menu.add.button("Buy", Buy, "bullets")
-    menu.add.image('resource/image/missile_256px.png',
-                   angle=Display.angle, scale=Display.help_scale)
-    menu.add.button("Buy", Buy, "missile")
-    menu.add.image('resource/image/missile2_256px.png',
-                   angle=Display.angle, scale=Display.help_scale)
-    menu.add.button("Buy", Buy, "missile2")
-    menu.add.image('resource/image/bomb_256px.png',
-                   angle=Display.angle, scale=Display.help_scale)
-    menu.add.button("Buy", Buy, "bomb")
-    menu.add.vertical_margin(50)
-    menu.add.button("Apply My Items", apply_item)
-    menu.add.button('Back', show_mode)
+    menu.add.label(Content.store_title.value, font_size=Display.title_fontsize.value, padding=Display.padding_large.value)  # page title
+    menu.add.button(Content.buyitem_btn.value,Buy_page) # 아이템 구매페이지로 이동
+    menu.add.button(Content.applyitem_btn.value,apply_item_page) # 아이템 적용 페이지로 이동
+    menu.add.button(Content.givecoin_btn.value,give_coin_page) # 코인 선물 페이지
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.button(Content.back_btn.value, show_mode) # 뒤로가기 버튼
 
 
-def apply_item():
+## STORE: BUY 페이지
+def Buy_page():
     menu.clear()
-    buyList = dataLoad.item_buyList_get(user)
-    for item in buyList:  # 사용자가 구매한 아이템 리스트 보여줌
-        image_path = 'resource/image/'+item+"_256px.png"
-        menu.add.image(image_path, angle=Display.angle,
-                       scale=Display.help_scale)  # 구매한 아이템 이미지
-        menu.add.button("Apply", dataLoad.item_apply(user, item))  # 아이템 적용 버튼
+    # 현재 코인 표시
+    menu.add.label(Content.coin.value)
+    menu.add.label(format(dataLoad.coin_get(register.user),','))
+    menu.add.label(Content.item_category.value)
+    item_list= Content.items.value
+    buy_list = dataLoad.item_buyList_get(register.user) # 사용자가 구매한 아이템 리스트 가져옴
+    for item in item_list: 
+        if item in buy_list: # 구매한 아이템일 경우, 흑색 이미지 사용 및 구매 버튼 비활성화
+            image_path=Content.img_path.value + item + Content.img_have.value
+            menu.add.image(image_path,
+                        angle=Display.angle.value, scale=Display.medium_scale.value)
+            menu.add.button(Content.buy_btn.value, Buy_check)
+        else: # 구매하지 않은 아이템일 경우, 컬러 이미지 사용 및 구매 버튼 활성화
+            weapon_image_path=Content.img_path.value+item+Content.img_size256.value
+            price_image_path=Content.img_path.value+item+Content.img_price.value
+            menu.add.image(weapon_image_path,
+                    angle=Display.angle.value, scale=Display.medium_scale.value)
+            menu.add.image(price_image_path,
+                    angle=Display.angle.value, scale=Display.medium_scale.value)
+            menu.add.button(Content.buy_btn.value, Buy, register.user,item)
 
-    menu.add.vertical_margin(50)
-    menu.add.label("Current Applied item")
-    item = dataLoad.item_apply_get(user)  # 현재 게임에 적용된 아이템 보여줌
-    image_path = 'resource/image/'+item+"_256px.png"
-
-    menu.add.image(image_path, angle=Display.angle, scale=Display.help_scale)
-
-    menu.add.vertical_margin(50)
-    menu.add.button("Back", store)
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.button(Content.back_btn.value, store) # 뒤로가기 버튼
 
 
-def Buy(item):
-    db.collection("User").document(user).update(
-        {"item": firestore.ArrayUnion([item])})
+## STORE: APPLY 페이지
+def apply_item_page():
+    menu.clear()
+    buy_list = dataLoad.item_buyList_get(register.email)
+    # 사용자가 구매한 아이템 리스트 보여주기
+    for item in buy_list:
+        image_path = Content.img_path.value+item+Content.img_size256.value
+        # 구매한 아이템 이미지
+        menu.add.image(image_path, angle=Display.angle.value, scale=Display.medium_scale.value)
+        # 아이템 적용 버튼
+        menu.add.button(Content.apply_btn.value, apply_current_item,register.email,item)
+
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.label(Content.applied_item.value)
+    # 현재 게임에 적용된 아이템 보여주기
+    item = dataLoad.item_apply_get(register.email)
+    image_path = Content.img_path.value+item+Content.img_size256.value
+
+    # 현재 적용 아이템 보기(refresh) 버튼
+    menu.add.button(Content.reload.value, apply_item_page)
+    menu.add.image(image_path, angle=Display.angle.value, scale=Display.medium_scale.value)
+
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.button(Content.back_btn.value, store)
 
 
-# 여기서부터가 메인화면
+## STORE: GIFT(코인 선물) 페이지
+def give_coin_page():
+    menu.clear()
+    menu.add.label(Content.gift_info.value)
+    friend_email = menu.add.text_input(Content.email_input.value) # 친구 이메일 입력
+    coin = menu.add.text_input(Content.coin_input.value) # 선물하고자 하는 코인량 입력
+    menu.add.button(Content.submit_btn.value,giveButton,friend_email,coin) # 입력값 제출 버튼
+
+    menu.add.vertical_margin(Display.small_margin.value)
+    menu.add.button(Content.back_btn.value, store) # 뒤로가기 버튼
+
+
+# PYGAME MENU #####
 menu_image = pygame_menu.baseimage.BaseImage(
-    image_path='resource/image/background.jpg', drawing_mode=pygame_menu.baseimage.IMAGE_MODE_REPEAT_XY)
+    image_path=Images.background.value, drawing_mode=pygame_menu.baseimage.IMAGE_MODE_REPEAT_XY)
 mytheme = pygame_menu.themes.THEME_GREEN.copy()
 
 mytheme.background_color = menu_image
 mytheme.title_bar_style = pygame_menu.widgets.MENUBAR_STYLE_NONE
 
-# 첫 화면 페이지(로그인, 회원가입 버튼)
-menu = pygame_menu.Menu(
-    '', size[Utillization.x], size[Utillization.y], theme=mytheme)
-# 현재 로그인 되었는지 여부 확인. 로그인 되지 않았으면 show_signinup() 보여주기, 로그인 되었다면 show_mode() 보여주기!
-show_signinup()
-menu.enable()
-on_resize()  # Set initial size
+menu = pygame_menu.Menu(Content.none.value, size[Utilization.x.value], size[Utilization.y.value], theme=mytheme)
 
-if __name__ == '__main__':
+
+if __name__ == Content.main.value:
+    # 첫 화면 페이지(로그인, 회원가입 버튼)
+    show_signinup()
+    menu.enable()
+    on_resize() # Set initial size
     while True:
         events = pygame.event.get()
         for event in events:
@@ -326,7 +354,41 @@ if __name__ == '__main__':
                 break
             if event.type == pygame.VIDEORESIZE:
                 # Update the surface
-                screen = pygame.display.set_mode((event.w, event.h),
+                if event.w <= Display.minscreen_x.value or event.h <= Display.minscreen_y.value:
+                    screen = pygame.display.set_mode((Display.minscreen_x.value, Display.minscreen_y.value),
+                                                 pygame.RESIZABLE)
+                else:
+                    screen = pygame.display.set_mode((event.w, event.h),
+                                                 pygame.RESIZABLE)
+                # Call the menu event
+                on_resize()
+            pygame.display.update()
+
+        menu.update(events)
+        menu.draw(screen)
+
+        pygame.display.flip()
+
+else:
+    size = [int(infoObject.current_w),
+        int(infoObject.current_h)]
+    screen = pygame.display.set_mode(size, pygame.RESIZABLE)
+    show_mode()
+    menu.enable()
+    on_resize() # Set initial size
+    while True:
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                break
+            if event.type == pygame.VIDEORESIZE:
+                # Update the surface
+                if event.w <= Display.minscreen_x.value or event.h <= Display.minscreen_y.value:
+                    screen = pygame.display.set_mode((Display.minscreen_x.value, Display.minscreen_y.value),
+                                                 pygame.RESIZABLE)
+                else:
+                    screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
                 # Call the menu event
                 on_resize()
@@ -335,6 +397,3 @@ if __name__ == '__main__':
         menu.draw(screen)
 
         pygame.display.flip()
-
-menu.mainloop(screen)
-pygame.quit()

@@ -9,12 +9,13 @@ OSSProj team SGC
 
 import pygame
 from pygame.locals import *
+from Defs import *
 
-TYPE_SMALL = 1
-TYPE_MIDDLE = 2
-TYPE_BIG = 3
-
-SCREEN = pygame.display.set_mode((480, 800), HWSURFACE | DOUBLEBUF | RESIZABLE)
+pygame.init()
+infoObject = pygame.display.Info()
+size = [int(infoObject.current_w),
+        int(infoObject.current_h)]
+SCREEN = pygame.display.set_mode(size, HWSURFACE | DOUBLEBUF | RESIZABLE)
 
 
 # bullet
@@ -24,7 +25,7 @@ class Bullet(pygame.sprite.Sprite):
         self.image = bullet_img
         self.rect = self.image.get_rect()
         self.rect.midbottom = init_pos
-        self.speed = 10
+        self.speed = Speed.bullet.value
 
     def move(self):
         self.rect.top -= self.speed
@@ -39,13 +40,10 @@ class Player(pygame.sprite.Sprite):
         for i in range(len(player_rect)):
             self.image.append(plane_img.subsurface(
                 player_rect[i]).convert_alpha())
-        # Initialize the rectangle where the image is located
-        self.rect = player_rect[0]
-        # Initialize the coordinates of the upper left corner of the rectangle
+
+        self.rect = player_rect[Utilization.x.value]
         self.rect.topleft = init_pos
-        # Initialize player speed, here is a definite value
-        self.speed = 8
-        # A collection of bullets fired by the player's aircraft
+        self.speed = Speed.player.value
         self.bullets = pygame.sprite.Group()
         self.img_index = 0                              # Player sprite image index
         self.is_hit = False                             # whether the player was hit
@@ -53,6 +51,11 @@ class Player(pygame.sprite.Sprite):
     def shoot(self, bullet_img):
         bullet = Bullet(bullet_img, self.rect.midtop)
         self.bullets.add(bullet)
+        self.speed = (SCREEN.get_size()[
+                      Utilization.x.value]//Resize.display.value)+Speed.player.value
+        if self.rect.top <= SCREEN.get_size()[Utilization.y.value] - self.rect.height - Game.p_margin.value:
+            self.rect.top = SCREEN.get_size(
+            )[Utilization.y.value] - self.rect.height - Game.p_margin.value
 
     def moveLeft(self):
         if self.rect.left <= 0:
@@ -61,8 +64,9 @@ class Player(pygame.sprite.Sprite):
             self.rect.left -= self.speed
 
     def moveRight(self):
-        if self.rect.left >= SCREEN.get_size()[0] - self.rect.width:
-            self.rect.left = SCREEN.get_size()[0] - self.rect.width
+        if self.rect.left >= SCREEN.get_size()[Utilization.x.value] - self.rect.width:
+            self.rect.left = SCREEN.get_size(
+            )[Utilization.x.value] - self.rect.width
         else:
             self.rect.left += self.speed
 
@@ -90,26 +94,78 @@ class Coin(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topleft = init_pos
         self.shine_imgs = coin_shine_imgs
-        self.speed = 10
+        self.speed = Speed.coin.value
 
     def move(self):
         self.rect.top += self.speed
-        self.index = self.rect.top % 240
-        self.image = self.shine_imgs[self.index // 40]
+        self.index = self.rect.top % Divide.coin.value
+        self.image = self.shine_imgs[self.index // Divide.coin_i.value]
 
 
-# landom box - star
+# random box - star
 class Star(pygame.sprite.Sprite):
     def __init__(self, star_img, star_spin_imgs, star_type):
         pygame.sprite.Sprite.__init__(self)
         self.image = star_img
         self.rect = self.image.get_rect()
-        self.rect.bottomright = [0, 0]
+        self.rect.bottomright = [Utilization.x.value, Utilization.y.value]
         self.spin_imgs = star_spin_imgs
         self.type = star_type
 
     def move(self):
-        self.rect.top += (SCREEN.get_size()[1]//50)
-        self.rect.left += (SCREEN.get_size()[0]//50)
-        self.index = self.rect.top % 210
-        self.image = self.spin_imgs[self.index // 30]
+        self.rect.top += (SCREEN.get_size()
+                          [Utilization.y.value]//Divide.star_r.value)
+        self.rect.left += (SCREEN.get_size()
+                           [Utilization.x.value]//Divide.star_r.value)
+        self.index = self.rect.top % Divide.star.value
+        self.image = self.spin_imgs[self.index // Divide.star_i.value]
+
+
+# random box effect - blind
+class Blind(pygame.sprite.Sprite):
+    def __init__(self, blind_img):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = blind_img
+        self.rect = self.image.get_rect()
+        self.rect.topright = [Utilization.x.value, 0]
+
+    def move(self):
+        self.rect.right += Speed.blind.value
+
+
+# random box effect - bomb
+class Bomb(pygame.sprite.Sprite):
+    def __init__(self, bomb_img):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = bomb_img
+        self.rect = self.image.get_rect()
+        self.rect.midtop = [SCREEN.get_size(
+        )[Utilization.x.value]/2, SCREEN.get_size()[Utilization.y.value]]
+
+    def attack(self):
+        self.rect.top -= Speed.bomb.value
+
+
+# random box effect - bomb
+class Mode(pygame.sprite.Sprite):
+    def __init__(self, mode_img):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = mode_img
+        self.rect = self.image.get_rect()
+        self.rect.topright = [Utilization.x.value, 0]
+
+    def show(self):
+        self.rect.right += Speed.mode.value
+
+
+# meteorite
+class Meteor(pygame.sprite.Sprite):
+    def __init__(self, meteor_img, init_pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = meteor_img
+        self.rect = self.image.get_rect()
+        self.rect.topleft = init_pos
+        self.speed = Speed.meteor.value
+
+    def move(self):
+        self.rect.top += self.speed
